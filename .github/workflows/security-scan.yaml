@@ -1,0 +1,60 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ main, feat/* ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 6 * * 1'  # Weekly on Monday at 6 AM
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/feat/')
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Dependency Review
+      uses: actions/dependency-review-action@v3
+      with:
+        fail-on-severity: high
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+    
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+    
+    - name: Docker Security Scan
+      run: |
+        # Build the image first
+        docker build -t mycandidate-security-test .
+        
+        # Run Trivy scan on the built image
+        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy:latest image --exit-code 1 --severity HIGH,CRITICAL \
+          mycandidate-security-test
+    
+    - name: Python Security Analysis
+      run: |
+        pip install bandit safety
+        bandit -r . -f json -o bandit-results.json || true
+        safety check --json --output safety-results.json || true
+    
+    - name: Upload security artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-reports
+        path: |
+          bandit-results.json
+          safety-results.json
+          trivy-results.sarif
