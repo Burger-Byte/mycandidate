@@ -1,11 +1,13 @@
 import os
 from flask import Flask, session
+from main.api import api_bp
 
 app = Flask(
     __name__,
     static_folder='static')
 
 app.secret_key = os.environ.get('SECRET_KEY', 'SECRET_KEY')
+app.register_blueprint(api_bp)
 
 # setup configs
 env = os.environ.get('FLASK_ENV', 'development')
