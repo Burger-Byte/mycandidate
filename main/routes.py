@@ -1,3 +1,4 @@
+import os
 from flask import request, render_template, redirect, url_for, session, flash
 import pandas as pd
 from .database.models import *
@@ -8,9 +9,15 @@ from .redis import get_cached_data_or_fetch
 from flask_minify import decorators as minify_decorators
 
 
+if os.environ.get('DATABASE_URL'):
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+    print(f"=== DEBUG: Set SQLALCHEMY_DATABASE_URI to: {app.config.get('SQLALCHEMY_DATABASE_URI')}")
+    db.engine.dispose()
+    db.get_engine().dispose()
+
 
 @app.route('/', methods=['GET', 'POST'])
-@minify_decorators.minify(html=True, js=True, cssless=True)
+# @minify_decorators.minify(html=True, js=True, cssless=True)
 def home():
     candidates = None
     candidate = None

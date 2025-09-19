@@ -98,8 +98,12 @@ def seed_data_candidates(db, excel_file_path):
                     table_name: table_name,
                     table_name: table_name
                 }
-                file_root = f'{app.root_path}/data/{csv_filename["file"]}'
-                csv_df = pd.read_csv(file_root, quotechar='"')
+                sheet_name = csv_filename["file"].replace('.csv', '')
+                try:
+                    csv_df = pd.read_excel(xls, sheet_name)
+                except Exception as e:
+                    print(f"Error reading sheet '{sheet_name}': {e}")
+                    continue
 
                 cleaned_columns = [col.replace(' ', '_') for col in csv_df.columns]
 

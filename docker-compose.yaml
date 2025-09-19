@@ -57,7 +57,7 @@ services:
       SSL_DISABLE: ${SSL_DISABLE:-False}
       
     ports:
-      - "8000:5000"
+      - "8100:5000"
     volumes:
       - ./logs:/app/logs
       - ./instance:/app/instance
