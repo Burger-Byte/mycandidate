@@ -40,3 +40,9 @@ logger = logging.getLogger(__name__)
 from flask_minify import Minify
 minify = Minify(app=app, passive=True)
 
+with app.app_context():
+    from main.api import api_bp
+    app.register_blueprint(api_bp)
+
+from main.api import api_bp
+app.register_blueprint(api_bp)
